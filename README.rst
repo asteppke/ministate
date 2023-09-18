@@ -34,4 +34,4 @@ ministate
 =========
 
 
-A minimal state machine in less than 100 lines of python. 
+A minimal state machine in 91 lines of python. 

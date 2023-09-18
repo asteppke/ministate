@@ -1,7 +1,7 @@
 """
-An example using the state machine module: a mouse that uses a queue to accept events
+An example using the state machine module: a mouse that uses a queue to accept transitions
 and uses this queue to process them. Depending on priority we can either run in 
-order or add events to the front of the queue.
+order or add transitions to the front of the queue.
 
 """
 
@@ -15,14 +15,14 @@ class Priority(Enum):
 
 
 class MouseState(State):
-    def run(self, event: Transition):
-        print(f"running {self.name}, transitioning to {event}")
+    def run(self, transition: Transition):
+        print(f"running {self.name}, transitioning to {transition}")
 
-        return event, Priority.NORMAL
+        return transition, Priority.NORMAL
 
 
 class Idle(MouseState):
-    def run(self, event: Transition):
+    def run(self, transition: Transition):
         print(f"sitting at {self.machine.values['position']}")
 
         # a break helps to recover breath
@@ -32,20 +32,20 @@ class Idle(MouseState):
 
 
 class Running(MouseState):
-    def run(self, event):
+    def run(self, transition):
         print("state: running")
         self.machine.run_ahead()
 
         return None, Priority.NORMAL
 
-    def decide_next(self, event):
+    def decide_next(self, transition):
         # if we measure we continue measuring :)
         if self.machine.values["breath"] == 0:
             # need to breath first
             print("need to breath!")
-        if event is None:
+        if transition is None:
             return self.machine.transitions[Transition("relax")]
-        return self.machine.transitions[event]
+        return self.machine.transitions[transition]
 
 
 class Mouse(StateMachine):
@@ -58,11 +58,11 @@ class Mouse(StateMachine):
 
         self.values = {"position": 0, "speed": 1.0, "breath": 10}
 
-    def dispatch(self, event, priority=Priority.NORMAL):
+    def dispatch(self, transition, priority=Priority.NORMAL):
         if priority == Priority.NORMAL:
-            self.queue.appendleft(event)
+            self.queue.appendleft(transition)
         elif priority == Priority.HIGH:
-            self.queue.append(event)
+            self.queue.append(transition)
 
     def run(self, print_queue=True):
         if print_queue:
@@ -70,21 +70,21 @@ class Mouse(StateMachine):
 
         done = False
         try:
-            event = self.queue.pop()
+            transition = self.queue.pop()
         except IndexError:
             # if the queue is empty we are done and return
             done = True
             return done
 
         # switch to next state
-        self.current_state = self.transitions[event]
+        self.current_state = self.transitions[transition]
 
         # and run it
-        next_event, priority = self.current_state.run(event)
+        next_transition, priority = self.current_state.run(transition)
 
         # and schedule next state
-        if next_event is not None:
-            self.dispatch(next_event, priority)
+        if next_transition is not None:
+            self.dispatch(next_transition, priority)
 
         return done
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     transition_names = ["relax", "start"]
     Transition.set_names(transition_names)
 
-    #  default transitions / events table
+    #  default transitions table
     transitions = defaultdict(lambda: mouse.Idle)
     transitions[Transition.start] = mouse.Running
     transitions[Transition.relax] = mouse.Idle
@@ -116,9 +116,9 @@ if __name__ == "__main__":
     mouse.transitions = transitions
     print(mouse.states)
 
-    EVENTS = "relax,start,start,relax"
+    TRANSITIONS = "relax,start,start,relax"
 
-    for ev in map(Transition, EVENTS.split(",")):
+    for ev in map(Transition, TRANSITIONS.split(",")):
         mouse.dispatch(ev)
 
     while True:
