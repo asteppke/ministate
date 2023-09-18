@@ -23,29 +23,32 @@ class MouseState(State):
 
 class Idle(MouseState):
     def run(self, transition: Transition):
-        print(f"sitting at {self.machine.values['position']}")
+        #print(f"sitting at {self.machine.values['position']}")
 
         # a break helps to recover breath
-        self.machine.values["breath"] = min(self.machine.values["breath"] + 1, 10)
+        self.machine.values["breath"] = min(self.machine.values["breath"] + 2, 10)
 
         return None, Priority.NORMAL
 
 
 class Running(MouseState):
     def run(self, transition):
-        print("state: running")
         self.machine.run_ahead()
 
-        return None, Priority.NORMAL
+        next_transition = self.decide_next(transition)
+
+        return next_transition, Priority.HIGH
 
     def decide_next(self, transition):
-        # if we measure we continue measuring :)
-        if self.machine.values["breath"] == 0:
+        # if we run we continue running :)
+        if self.machine.values["breath"] <= 0:
             # need to breath first
-            print("need to breath!")
+            print("Need to breathe!")
+            return Transition("relax")
         if transition is None:
-            return self.machine.transitions[Transition("relax")]
-        return self.machine.transitions[transition]
+            return Transition('relax')
+        else:
+            return Transition("start")
 
 
 class Mouse(StateMachine):
@@ -60,17 +63,18 @@ class Mouse(StateMachine):
 
     def dispatch(self, transition, priority=Priority.NORMAL):
         if priority == Priority.NORMAL:
-            self.queue.appendleft(transition)
-        elif priority == Priority.HIGH:
             self.queue.append(transition)
+        elif priority == Priority.HIGH:
+            self.queue.appendleft(transition)
 
     def run(self, print_queue=True):
+        print(f"state: {self.current_state.name}")
         if print_queue:
             print([str(e) for e in self.queue])
 
         done = False
         try:
-            transition = self.queue.pop()
+            transition = self.queue.popleft()
         except IndexError:
             # if the queue is empty we are done and return
             done = True
@@ -92,7 +96,8 @@ class Mouse(StateMachine):
         self.values["speed"] = self.values["breath"] / 10
         self.values["position"] += self.values["speed"]
         self.values["breath"] -= 1
-
+        print(f"Mouse at {self.values['position']}, with speed {self.values['speed']} and breath {self.values['breath']}.")
+        
 
 if __name__ == "__main__":
     # a mouse example
@@ -116,7 +121,7 @@ if __name__ == "__main__":
     mouse.transitions = transitions
     print(mouse.states)
 
-    TRANSITIONS = "relax,start,start,relax"
+    TRANSITIONS = "relax,start,start,start,relax"
 
     for ev in map(Transition, TRANSITIONS.split(",")):
         mouse.dispatch(ev)
