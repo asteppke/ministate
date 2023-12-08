@@ -1,19 +1,20 @@
 """ A minimalist state machine. """
 
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Optional
+from typing import List, Optional, Dict
 
 
 class State(ABC):
-    """A State has an operation, and decides the next State given a transition."""
+    """A State encodes a particular behavior of the state machine,
+    and decides the next state given an event."""
 
     def __init__(self):
         self._machine = None
         self.name = self.__class__.__name__
 
     @abstractmethod
-    def run(self, transition: "Transition"):
-        """Runs action and signals next state to the StateMachine"""
+    def run(self, event: "Event"):
+        """Runs action and decides next state for the StateMachine"""
 
     @property
     def machine(self) -> "StateMachine":
@@ -27,12 +28,13 @@ class State(ABC):
 
 
 class StateMachine:
-    """Takes a list of transitions to move from state to state."""
+    """A machine where the behavior is given by its current state.
+    Processes a list of events to decide on the next state."""
 
     def __init__(
         self,
         states: Optional[List["State"]] = None,
-        transitions: Optional[List["Transition"]] = None,
+        transitions: Optional[Dict] = None,
         current_state: Optional["State"] = None,
     ):
         self._states: List["State"] = []
@@ -55,19 +57,14 @@ class StateMachine:
         """Returns all possible states."""
         return self._states
 
-    def run_input(self, transition: "Transition"):
-        """Processes the given transition."""
+    def run(self, event: "Event"):
+        """Processes the given event."""
         if self.current_state is not None:
-            self.current_state.run(transition)
-
-    def run_all(self, transitions: Iterable["Transition"]):
-        """Processes all given transitions."""
-        for i in transitions:
-            self.run_input(i)
+            self.current_state = self.current_state.run(event)
 
 
-class Transition:
-    """Template for transitions"""
+class Event:
+    """Template for events"""
 
     def __init__(self, name: str, cargo=None):
         self.name = name
@@ -79,12 +76,12 @@ class Transition:
     def __eq__(self, other):
         return self.name == other.name
 
-    # Necessary when __eq__ is defined to allow transitions to be a dictionary key
+    # Necessary when __eq__ is defined to allow events to be a dictionary key
     def __hash__(self):
         return hash(self.name)
 
     @classmethod
-    def set_names(cls, transition_names: List[str]):
-        """Assigns each Transition a given name independent of the object."""
-        for name in transition_names:
-            setattr(Transition, name, Transition(name))
+    def set_names(cls, event_names: List[str]):
+        """Assigns each Event a given name independent of the object."""
+        for name in event_names:
+            setattr(Event, name, Event(name))

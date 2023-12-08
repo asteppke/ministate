@@ -1,1 +1,1 @@
-from .statemachine import State, StateMachine, Transition
+from .statemachine import State, StateMachine, Event

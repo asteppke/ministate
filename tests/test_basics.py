@@ -1,6 +1,6 @@
 import pytest
 
-from ministate.statemachine import State, StateMachine, Transition
+from ministate.statemachine import State, StateMachine, Event
 
 
 def test_empty():
@@ -8,15 +8,25 @@ def test_empty():
 
 
 class IdleState(State):
-    def run(self, transition: Transition):
+    def run(self, event: Event):
         return self
     
+
+class Sleeping(State):
+    def run(self, event: Event):
+        return self
+        
 def test_basics():
     idle = IdleState()
-    nothing = Transition('nothing')
+    nothing = Event('nothing')
     machine = StateMachine([idle], [nothing], idle)
 
-    machine.run_input(nothing)
+    machine.run(nothing)
 
     assert machine.current_state == idle
     
+    sleep = Sleeping()
+    machine.add_state(sleep)
+
+    assert idle in machine.states
+    assert sleep in machine.states
