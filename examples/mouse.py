@@ -9,6 +9,7 @@ from collections import defaultdict, deque
 from enum import Enum
 from ministate import State, StateMachine, Event
 
+
 class Priority(Enum):
     NORMAL = 1
     HIGH = 2
@@ -16,7 +17,10 @@ class Priority(Enum):
 
 class MouseState(State):
     def run(self, event: Event):
-        print(f"running: {self.name}, received: {event}, going to {self.machine.transitions[event]}")
+        print(
+            f"running: {self.name}, received: {event}, going to"
+            f" {self.machine.transitions[event]}"
+        )
 
         return self.machine.transitions[event], Priority.NORMAL
 
@@ -44,14 +48,13 @@ class Running(MouseState):
             print("Need to breathe!")
             return Event("relax")
         if event is None:
-            return Event('relax')
+            return Event("relax")
         else:
             return Event("start")
 
 
 class Mouse(StateMachine):
     def __init__(self, states=None):
-
         StateMachine.__init__(self, states)
 
         # this will be our queue for communication with other objects
@@ -94,8 +97,11 @@ class Mouse(StateMachine):
         self.values["speed"] = self.values["breath"] / 10
         self.values["position"] += self.values["speed"]
         self.values["breath"] -= 1
-        print(f"Mouse at {self.values['position']}, with speed {self.values['speed']} and breath {self.values['breath']}.")
-        
+        print(
+            f"Mouse at {self.values['position']}, with speed {self.values['speed']} and"
+            f" breath {self.values['breath']}."
+        )
+
 
 if __name__ == "__main__":
     # a mouse example

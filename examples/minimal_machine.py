@@ -4,21 +4,29 @@ from ministate import State, StateMachine, Event
 
 class Adding(State):
     def run(self, event: Event):
-        print(f"running: {self.name}, received: {event}, going to {self.machine.transitions[event]}")
+        print(
+            f"running: {self.name}, received: {event}, going to"
+            f" {self.machine.transitions[event]}"
+        )
         return self.machine.transitions[event]
-    
+
     def do_math(self):
         self.machine.value += 1
+
+
 class Subtracting(State):
     def run(self, event: Event):
-        print(f"running: {self.name}, received: {event}, going to {self.machine.transitions[event]}")
+        print(
+            f"running: {self.name}, received: {event}, going to"
+            f" {self.machine.transitions[event]}"
+        )
         return self.machine.transitions[event]
-    
+
     def do_math(self):
         self.machine.value -= 1
 
-class MinimalMachine(StateMachine):
 
+class MinimalMachine(StateMachine):
     def __init__(self, states=None):
         super().__init__(states)
         self.value = 0
