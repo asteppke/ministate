@@ -1,6 +1,6 @@
 """
 An example using the state machine module: a mouse that uses a queue to accept events
-and uses this queue to process them. Depending on priority we can either run in 
+and uses this queue to process them. Depending on priority we can either run in
 order or add events to the front of the queue.
 
 """
@@ -16,26 +16,23 @@ class Priority(Enum):
 
 
 class MouseState(State):
-    def run(self, event: Event):
-        print(
-            f"running: {self.name}, received: {event}, going to"
-            f" {self.machine.transitions[event]}"
-        )
+    def process(self, event: Event):
+        print(f"running: {self.name}, received: {event}, going to" f" {self.machine.transitions[event]}")
 
         return self.machine.transitions[event], Priority.NORMAL
 
 
 class Idle(MouseState):
-    def run(self, transition: Event):
+    def process(self, transition: Event):
         # a break helps to recover breath
-        self.machine.values["breath"] = min(self.machine.values["breath"] + 2, 10)
+        self.model.values["breath"] = min(self.model.values["breath"] + 2, 10)
 
         return None, Priority.NORMAL
 
 
 class Running(MouseState):
-    def run(self, event):
-        self.machine.run_ahead()
+    def process(self, event):
+        self.model.run_ahead()
 
         next_event = self.decide_next(event)
 
@@ -43,7 +40,7 @@ class Running(MouseState):
 
     def decide_next(self, event):
         # if we run we continue running :)
-        if self.machine.values["breath"] <= 0:
+        if self.model.values["breath"] <= 0:
             # need to breath first
             print("Need to breathe!")
             return Event("relax")
@@ -55,7 +52,7 @@ class Running(MouseState):
 
 class Mouse(StateMachine):
     def __init__(self, states=None):
-        StateMachine.__init__(self, states)
+        StateMachine.__init__(self, None, states)
 
         # this will be our queue for communication with other objects
         self.queue = deque()
@@ -85,7 +82,7 @@ class Mouse(StateMachine):
         self.current_state = self.transitions[event]
 
         # and run it
-        next_event, priority = self.current_state.run(event)
+        next_event, priority = self.current_state.process(event)
 
         # and schedule next state
         if next_event is not None:

@@ -1,4 +1,4 @@
-""" A minimalist state machine. """
+"""A minimalist state machine."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict
@@ -6,25 +6,25 @@ from typing import List, Optional, Dict
 
 class State(ABC):
     """A State encodes a particular behavior of the state machine,
-    and decides the next state given an event."""
+    and decides the next state given the transitions table and the event."""
 
     def __init__(self):
-        self._machine = None
+        self._model = None
         self.name = self.__class__.__name__
 
     @abstractmethod
-    def run(self, event: "Event"):
+    def process(self, event: "Event"):
         """Runs action and decides next state for the StateMachine"""
 
     @property
-    def machine(self) -> "StateMachine":
-        """A reference to the StateMachine this state belongs to."""
-        return self._machine
+    def model(self):
+        """A reference to the model this state belongs to."""
+        return self._model
 
-    @machine.setter
-    def machine(self, machine: "StateMachine") -> None:
-        """Setting the reference to the StateMachine."""
-        self._machine = machine
+    @model.setter
+    def model(self, model) -> None:
+        """Setting the reference to the model."""
+        self._model = model
 
 
 class StateMachine:
@@ -33,22 +33,25 @@ class StateMachine:
 
     def __init__(
         self,
-        states: Optional[List["State"]] = None,
+        model: Optional[object] = None,
+        states: Optional[List[State]] = None,
         transitions: Optional[Dict] = None,
-        current_state: Optional["State"] = None,
+        current_state: Optional[State] = None,
     ):
-        self._states: List["State"] = []
+        self._states: List[State] = []
+        # default to self if no model is given
+        self.model = model if model is not None else self
         self.current_state = current_state
 
         if states is not None:
             for state in states:
                 self.add_state(state)
 
-        self.transitions = transitions
+        self.transitions = transitions if transitions is not None else {}
 
-    def add_state(self, state: "State"):
+    def add_state(self, state: State):
         """Adds the state as an attribute to StateMachine, i.e. st = StateMachine; st.StateName"""
-        state.machine = self  # back-reference in state to machine
+        state.model = self.model  # back-reference in state to the model
         self._states.append(state)
         setattr(self, state.name, state)
 
@@ -57,10 +60,10 @@ class StateMachine:
         """Returns all possible states."""
         return self._states
 
-    def run(self, event: "Event"):
+    def process(self, event: "Event"):
         """Processes the given event."""
         if self.current_state is not None:
-            self.current_state = self.current_state.run(event)
+            self.current_state = self.current_state.process(event)
 
 
 class Event:
@@ -72,6 +75,9 @@ class Event:
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return f"Event({self.name}, {self.cargo})"
 
     def __eq__(self, other):
         return self.name == other.name

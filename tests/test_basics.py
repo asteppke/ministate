@@ -8,20 +8,20 @@ def test_empty():
 
 
 class IdleState(State):
-    def run(self, event: Event):
+    def process(self, event: Event):
         return self
     
 
 class Sleeping(State):
-    def run(self, event: Event):
+    def process(self, event: Event):
         return self
         
 def test_basics():
     idle = IdleState()
     nothing = Event('nothing')
-    machine = StateMachine([idle], [nothing], idle)
+    machine = StateMachine(model=None, states=[idle], current_state=idle)
 
-    machine.run(nothing)
+    machine.process(nothing)
 
     assert machine.current_state == idle
     
