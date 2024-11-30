@@ -27,11 +27,13 @@
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/
 
-|
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :alt: Code style: black
+    :target: https://github.com/psf/black
 
 =========
 ministate
 =========
 
 
-A minimal state machine in 91 lines of python. 
+A minimal state machine in 93 lines of python. 
