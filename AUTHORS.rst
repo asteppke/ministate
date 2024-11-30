@@ -2,4 +2,4 @@
 Contributors
 ============
 
-* Alexander Steppke <asteppke@gmail.com>
+* Alexander Steppke
