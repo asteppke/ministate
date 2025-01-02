@@ -13,29 +13,56 @@ class State(ABC):
         self.name = self.__class__.__name__
 
     @abstractmethod
-    def process(self, event: "Event"):
+    def process(self, event: "Event") -> "State":
         """Runs action and decides next state for the StateMachine"""
 
     @property
-    def model(self):
+    def model(self) -> object:
         """A reference to the model this state belongs to."""
         return self._model
 
     @model.setter
-    def model(self, model) -> None:
+    def model(self, model: object) -> None:
         """Setting the reference to the model."""
         self._model = model
 
 
+class Event:
+    """Template for events. Each event has a name and an optional cargo."""
+
+    def __init__(self, name: str, cargo=None):
+        self.name = name
+        self.cargo = cargo
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f"Event({self.name}, {self.cargo})"
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    # Necessary when __eq__ is defined to allow events to be a dictionary key
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    @classmethod
+    def set_names(cls, event_names: List[str]):
+        """Assigns each Event a given name independent of the object."""
+        for name in event_names:
+            setattr(Event, name, Event(name))
+
+
 class StateMachine:
     """A machine where the behavior is given by its current state.
-    Processes a list of events to decide on the next state."""
+    Processes incoming events and switches to the next state."""
 
     def __init__(
         self,
         model: Optional[object] = None,
         states: Optional[List[State]] = None,
-        transitions: Optional[Dict] = None,
+        transitions: Optional[Dict[str, Dict[str | type[Event], type[State]]]] = None,
         current_state: Optional[State] = None,
     ):
         self._states: List[State] = []
@@ -61,33 +88,6 @@ class StateMachine:
         return self._states
 
     def process(self, event: "Event"):
-        """Processes the given event."""
+        """Processes the given event and switches to next state."""
         if self.current_state is not None:
             self.current_state = self.current_state.process(event)
-
-
-class Event:
-    """Template for events"""
-
-    def __init__(self, name: str, cargo=None):
-        self.name = name
-        self.cargo = cargo
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return f"Event({self.name}, {self.cargo})"
-
-    def __eq__(self, other):
-        return self.name == other.name
-
-    # Necessary when __eq__ is defined to allow events to be a dictionary key
-    def __hash__(self):
-        return hash(self.name)
-
-    @classmethod
-    def set_names(cls, event_names: List[str]):
-        """Assigns each Event a given name independent of the object."""
-        for name in event_names:
-            setattr(Event, name, Event(name))
